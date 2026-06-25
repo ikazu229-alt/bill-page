@@ -139,7 +139,6 @@
         function renderBill(data) {
             const content = document.getElementById('content');
             
-            // 汇总卡片
             let html = `
                 <div class="summary-grid">
                     <div class="summary-item">
@@ -165,7 +164,6 @@
                 </div>
             `;
 
-            // 入款记录
             if (data.income && data.income.length > 0) {
                 html += `<div class="section-title">📈 入款记录（${data.income.length}笔）</div>`;
                 for (const item of data.income) {
@@ -184,7 +182,6 @@
                 html += `<div class="empty">📭 暂无入款记录</div>`;
             }
 
-            // 下发记录
             if (data.expense && data.expense.length > 0) {
                 html += `<div class="section-title">📉 下发记录（${data.expense.length}笔）</div>`;
                 for (const item of data.expense) {
@@ -202,7 +199,6 @@
                 html += `<div class="empty">📭 暂无下发记录</div>`;
             }
 
-            // 底部统计
             html += `
                 <div class="stats-row">
                     <span class="item">📈 总入款：<strong>${formatNumber(data.total_income_raw)}</strong>（<strong>${formatMoney(data.total_income_usd)}</strong>U）</span>
@@ -216,7 +212,6 @@
             document.getElementById('generatedTime').textContent = `生成时间: ${new Date().toLocaleString()}`;
         }
 
-        // 解析URL参数
         const urlParams = new URLSearchParams(window.location.search);
         const encodedData = urlParams.get('data');
 
