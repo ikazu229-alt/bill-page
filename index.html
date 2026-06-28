@@ -22,23 +22,27 @@
         .stat-value.blue { color: #4fc3f7; }
         .section { margin: 16px 0; }
         .section-title { color: #ffd54f; font-size: 16px; font-weight: bold; padding: 8px 12px; background: rgba(255,213,79,0.1); border-radius: 8px; margin-bottom: 10px; }
-        .record { padding: 8px 14px; margin: 4px 0; background: rgba(255,255,255,0.04); border-radius: 6px; font-size: 14px; display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; }
+        .record { padding: 10px 14px; margin: 4px 0; background: rgba(255,255,255,0.04); border-radius: 6px; font-size: 14px; display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; }
         .record-deposit { border-left: 3px solid #66bb6a; }
         .record-withdraw { border-left: 3px solid #ef5350; }
-        .record-time { color: #78909c; font-size: 12px; }
+        .record-time { color: #78909c; font-size: 12px; min-width: 70px; }
         .record-amount { font-weight: bold; }
         .record-amount.green { color: #66bb6a; }
         .record-amount.red { color: #ef5350; }
         .record-user { color: #90a4ae; font-size: 13px; }
+        .record-rate { color: #4fc3f7; font-size: 12px; background: rgba(79,195,247,0.1); padding: 2px 8px; border-radius: 4px; }
         .empty { color: #78909c; text-align: center; padding: 20px; }
         .footer { text-align: center; color: #78909c; font-size: 12px; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px; }
         .error { text-align: center; padding: 40px; color: #ef5350; }
         .record-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .record-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .record-formula { color: #78909c; font-size: 12px; }
         @media (max-width: 600px) {
             .container { padding: 16px; }
             .period-tab { padding: 8px 16px; font-size: 14px; }
             .stats { grid-template-columns: repeat(2, 1fr); }
             .record { font-size: 12px; }
+            .record-rate { font-size: 10px; }
         }
     </style>
 </head>
@@ -84,14 +88,11 @@ function getDataFromURL() {
         return null;
     }
     try {
-        // 先尝试 base64 解码
         let jsonStr = dataParam;
         try {
-            // 尝试 base64 解码
             const decoded = atob(decodeURIComponent(dataParam));
             jsonStr = decoded;
         } catch(e) {
-            // 如果不是 base64，尝试直接 URL 解码
             jsonStr = decodeURIComponent(dataParam);
         }
         const data = JSON.parse(jsonStr);
@@ -116,40 +117,49 @@ function renderBill(period) {
         return;
     }
     
-    // 获取所有记录
     let allDeposits = allData.deposits || [];
     let allWithdraws = allData.withdraws || [];
     
-    // 根据周期筛选（简单处理：全部显示，因为数据已经是按周期传过来的）
     let deposits = allDeposits;
     let withdraws = allWithdraws;
+    
+    // 获取汇率和费率
+    const exchange = allData.exchange || 1;
+    const rate = allData.rate || 0;
     
     // 更新统计
     document.getElementById('totalDeposit').textContent = allData.totalDepositRaw || '0';
     document.getElementById('totalWithdraw').textContent = (allData.totalWithdraw || 0).toFixed(2) + 'U';
     document.getElementById('balance').textContent = (allData.balance || 0).toFixed(2) + 'U';
-    document.getElementById('exchange').textContent = allData.exchange || '1';
-    document.getElementById('rate').textContent = (allData.rate || 0) + '%';
+    document.getElementById('exchange').textContent = exchange;
+    document.getElementById('rate').textContent = rate + '%';
     
-    // 更新计数
     document.getElementById('depositCount').textContent = deposits.length;
     document.getElementById('withdrawCount').textContent = withdraws.length;
     
-    // 渲染入款
+    // 渲染入款 - 显示汇率和费率
     const depositList = document.getElementById('depositList');
     if (deposits.length === 0) {
         depositList.innerHTML = '<div class="empty">暂无入款记录</div>';
     } else {
-        depositList.innerHTML = deposits.map(r => `
+        depositList.innerHTML = deposits.map(r => {
+            const rawDisplay = r.raw_display || r.raw_amount || 0;
+            const amountUsd = r.amount || 0;
+            const rateFactor = (1 - rate/100).toFixed(2);
+            return `
             <div class="record record-deposit">
                 <div class="record-left">
                     <span class="record-time">${r.time || ''}</span>
-                    <span>+${r.raw_display || r.raw_amount || 0}</span>
+                    <span>+${rawDisplay}</span>
+                    <span class="record-formula">/ ${exchange} * (${rateFactor})</span>
                 </div>
-                <span class="record-amount green">${r.amount ? r.amount.toFixed(2) : '0'}U</span>
-                <span class="record-user">${r.username || '未知用户'}</span>
+                <div class="record-right">
+                    <span class="record-amount green">${amountUsd.toFixed(2)}U</span>
+                    <span class="record-rate">💱 ${exchange} | 📊 ${rate}%</span>
+                    <span class="record-user">${r.username || '未知用户'}</span>
+                </div>
             </div>
-        `).join('');
+        `}).join('');
     }
     
     // 渲染下发
@@ -163,8 +173,11 @@ function renderBill(period) {
                     <span class="record-time">${r.time || ''}</span>
                     <span>下发</span>
                 </div>
-                <span class="record-amount red">-${r.amount ? r.amount.toFixed(2) : '0'}U</span>
-                <span class="record-user">${r.username || '未知用户'}</span>
+                <div class="record-right">
+                    <span class="record-amount red">-${(r.amount || 0).toFixed(2)}U</span>
+                    <span class="record-rate">💱 ${exchange} | 📊 ${rate}%</span>
+                    <span class="record-user">${r.username || '未知用户'}</span>
+                </div>
             </div>
         `).join('');
     }
