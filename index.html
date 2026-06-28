@@ -13,7 +13,7 @@
         .period-tab { padding: 10px 30px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s; background: #2a2a4a; color: #888; }
         .period-tab:hover { background: #3a3a5a; color: #fff; }
         .period-tab.active { background: #4fc3f7; color: #0f0f1a; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; background: rgba(79,195,247,0.08); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; background: rgba(79,195,247,0.08); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
         .stat-item { text-align: center; }
         .stat-label { font-size: 12px; color: #78909c; }
         .stat-value { font-size: 18px; font-weight: bold; margin-top: 4px; }
@@ -22,7 +22,7 @@
         .stat-value.blue { color: #4fc3f7; }
         .section { margin: 16px 0; }
         .section-title { color: #ffd54f; font-size: 16px; font-weight: bold; padding: 8px 12px; background: rgba(255,213,79,0.1); border-radius: 8px; margin-bottom: 10px; }
-        .record { padding: 8px 14px; margin: 4px 0; background: rgba(255,255,255,0.04); border-radius: 6px; font-size: 14px; display: flex; justify-content: space-between; flex-wrap: wrap; }
+        .record { padding: 8px 14px; margin: 4px 0; background: rgba(255,255,255,0.04); border-radius: 6px; font-size: 14px; display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; }
         .record-deposit { border-left: 3px solid #66bb6a; }
         .record-withdraw { border-left: 3px solid #ef5350; }
         .record-time { color: #78909c; font-size: 12px; }
@@ -32,8 +32,8 @@
         .record-user { color: #90a4ae; font-size: 13px; }
         .empty { color: #78909c; text-align: center; padding: 20px; }
         .footer { text-align: center; color: #78909c; font-size: 12px; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px; }
-        .loading { text-align: center; padding: 40px; color: #4fc3f7; }
         .error { text-align: center; padding: 40px; color: #ef5350; }
+        .record-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         @media (max-width: 600px) {
             .container { padding: 16px; }
             .period-tab { padding: 8px 16px; font-size: 14px; }
@@ -56,7 +56,7 @@
         <div class="stat-item"><div class="stat-label">📥 总入款</div><div class="stat-value green" id="totalDeposit">-</div></div>
         <div class="stat-item"><div class="stat-label">📤 已下发</div><div class="stat-value red" id="totalWithdraw">-</div></div>
         <div class="stat-item"><div class="stat-label">💰 余额</div><div class="stat-value blue" id="balance">-</div></div>
-        <div class="stat-item"><div class="stat-label">📊 汇率</div><div class="stat-value blue" id="exchange">-</div></div>
+        <div class="stat-item"><div class="stat-label">💱 汇率</div><div class="stat-value blue" id="exchange">-</div></div>
         <div class="stat-item"><div class="stat-label">📊 费率</div><div class="stat-value blue" id="rate">-</div></div>
     </div>
     
@@ -84,8 +84,18 @@ function getDataFromURL() {
         return null;
     }
     try {
-        const jsonStr = decodeURIComponent(dataParam);
-        return JSON.parse(jsonStr);
+        // 先尝试 base64 解码
+        let jsonStr = dataParam;
+        try {
+            // 尝试 base64 解码
+            const decoded = atob(decodeURIComponent(dataParam));
+            jsonStr = decoded;
+        } catch(e) {
+            // 如果不是 base64，尝试直接 URL 解码
+            jsonStr = decodeURIComponent(dataParam);
+        }
+        const data = JSON.parse(jsonStr);
+        return data;
     } catch (e) {
         console.error('解析数据失败:', e);
         return null;
@@ -98,39 +108,21 @@ function renderBill(period) {
     if (!allData) {
         document.getElementById('depositList').innerHTML = '<div class="error">❌ 未找到账单数据，请重新从机器人获取链接</div>';
         document.getElementById('withdrawList').innerHTML = '';
+        document.getElementById('totalDeposit').textContent = '0';
+        document.getElementById('totalWithdraw').textContent = '0U';
+        document.getElementById('balance').textContent = '0U';
+        document.getElementById('exchange').textContent = '-';
+        document.getElementById('rate').textContent = '-';
         return;
     }
     
-    // 根据周期筛选数据
-    let records = allData.records || [];
-    let filtered = records;
+    // 获取所有记录
+    let allDeposits = allData.deposits || [];
+    let allWithdraws = allData.withdraws || [];
     
-    if (period === '今日') {
-        const today = new Date().toDateString();
-        filtered = records.filter(r => {
-            // 简单过滤：时间在今天
-            return true; // 默认显示全部
-        });
-    } else if (period === '本周') {
-        // 简单过滤：显示全部
-        filtered = records;
-    } else if (period === '本月') {
-        filtered = records;
-    }
-    
-    // 实际上，我们直接使用传入的数据，因为数据已经是按周期筛选好的
-    const deposits = (allData.deposits || []).filter(r => {
-        if (period === '今日') return true;
-        return true;
-    });
-    const withdraws = (allData.withdraws || []).filter(r => {
-        if (period === '今日') return true;
-        return true;
-    });
-    
-    // 但为了正确显示，我们使用allData中已分好的数据
-    const depositData = allData.deposits || [];
-    const withdrawData = allData.withdraws || [];
+    // 根据周期筛选（简单处理：全部显示，因为数据已经是按周期传过来的）
+    let deposits = allDeposits;
+    let withdraws = allWithdraws;
     
     // 更新统计
     document.getElementById('totalDeposit').textContent = allData.totalDepositRaw || '0';
@@ -140,17 +132,20 @@ function renderBill(period) {
     document.getElementById('rate').textContent = (allData.rate || 0) + '%';
     
     // 更新计数
-    document.getElementById('depositCount').textContent = depositData.length;
-    document.getElementById('withdrawCount').textContent = withdrawData.length;
+    document.getElementById('depositCount').textContent = deposits.length;
+    document.getElementById('withdrawCount').textContent = withdraws.length;
     
     // 渲染入款
     const depositList = document.getElementById('depositList');
-    if (depositData.length === 0) {
+    if (deposits.length === 0) {
         depositList.innerHTML = '<div class="empty">暂无入款记录</div>';
     } else {
-        depositList.innerHTML = depositData.map(r => `
+        depositList.innerHTML = deposits.map(r => `
             <div class="record record-deposit">
-                <span><span class="record-time">${r.time || ''}</span> +${r.raw_display || r.raw_amount || 0}</span>
+                <div class="record-left">
+                    <span class="record-time">${r.time || ''}</span>
+                    <span>+${r.raw_display || r.raw_amount || 0}</span>
+                </div>
                 <span class="record-amount green">${r.amount ? r.amount.toFixed(2) : '0'}U</span>
                 <span class="record-user">${r.username || '未知用户'}</span>
             </div>
@@ -159,19 +154,22 @@ function renderBill(period) {
     
     // 渲染下发
     const withdrawList = document.getElementById('withdrawList');
-    if (withdrawData.length === 0) {
+    if (withdraws.length === 0) {
         withdrawList.innerHTML = '<div class="empty">暂无下发记录</div>';
     } else {
-        withdrawList.innerHTML = withdrawData.map(r => `
+        withdrawList.innerHTML = withdraws.map(r => `
             <div class="record record-withdraw">
-                <span><span class="record-time">${r.time || ''}</span> 下发</span>
+                <div class="record-left">
+                    <span class="record-time">${r.time || ''}</span>
+                    <span>下发</span>
+                </div>
                 <span class="record-amount red">-${r.amount ? r.amount.toFixed(2) : '0'}U</span>
                 <span class="record-user">${r.username || '未知用户'}</span>
             </div>
         `).join('');
     }
     
-    document.getElementById('footerTime').textContent = '📅 ' + new Date().toLocaleString();
+    document.getElementById('footerTime').textContent = '📅 ' + new Date().toLocaleString() + ' · 共 ' + (deposits.length + withdraws.length) + ' 条记录';
 }
 
 // 切换周期
