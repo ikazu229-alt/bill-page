@@ -90,6 +90,14 @@
         .error-state .error-title { color: #ef5350; font-size: 20px; font-weight: 600; }
         .error-state .error-desc { color: #546e7a; font-size: 14px; margin-top: 8px; }
 
+        /* 统计说明 */
+        .stats-note { display: flex; justify-content: center; gap: 20px; margin-bottom: 10px; font-size: 12px; color: #546e7a; flex-wrap: wrap; }
+        .stats-note span { display: flex; align-items: center; gap: 4px; }
+        .stats-note .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; }
+        .stats-note .dot.green { background: #66bb6a; }
+        .stats-note .dot.red { background: #ef5350; }
+        .stats-note .dot.blue { background: #4fc3f7; }
+
         @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 768px) {
             body { padding: 12px; }
@@ -144,10 +152,10 @@
         <label>📅 选择日期：</label>
         <input type="date" id="datePicker">
         <div class="quick-btns">
-            <button class="quick-btn active" data-days="0">今日</button>
-            <button class="quick-btn" data-days="1">昨日</button>
-            <button class="quick-btn" data-days="7">近7日</button>
-            <button class="quick-btn" data-days="30">本月</button>
+            <button class="quick-btn active" data-mode="today">今日</button>
+            <button class="quick-btn" data-mode="yesterday">昨日</button>
+            <button class="quick-btn" data-mode="week">近7日</button>
+            <button class="quick-btn" data-mode="month">本月</button>
         </div>
     </div>
 
@@ -183,6 +191,13 @@
             <div class="stat-value purple" id="rate">-</div>
             <div class="stat-sub">交易费率</div>
         </div>
+    </div>
+
+    <!-- 统计说明 -->
+    <div class="stats-note">
+        <span><span class="dot green"></span>入款</span>
+        <span><span class="dot red"></span>下发</span>
+        <span><span class="dot blue"></span>余额</span>
     </div>
 
     <!-- 入款记录 -->
@@ -226,6 +241,7 @@
     //  从 URL 参数获取数据
     // ================================================================
     let allRecords = [];
+    let allData = null;
 
     function getDataFromURL() {
         const params = new URLSearchParams(window.location.search);
@@ -254,53 +270,104 @@
     }
 
     // ================================================================
-    //  根据日期筛选记录
+    //  根据模式筛选记录
     // ================================================================
-    function filterByDate(records, dateStr) {
-        if (!dateStr) return records;
-        // dateStr 格式: YYYY-MM-DD
-        return records.filter(r => {
-            // 记录时间格式 HH:MM:SS，需要从原始数据中获取日期
-            // 如果记录没有日期，则用今天的日期
-            const recordDate = r.date || new Date().toISOString().split('T')[0];
-            return recordDate === dateStr;
-        });
+    function filterRecords(mode) {
+        if (!allData) return { deposits: [], withdraws: [] };
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString().split('T')[0];
+
+        let startDate = null;
+        let endDate = null;
+
+        switch (mode) {
+            case 'today':
+                startDate = todayStr;
+                endDate = todayStr;
+                break;
+            case 'yesterday':
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yStr = yesterday.toISOString().split('T')[0];
+                startDate = yStr;
+                endDate = yStr;
+                break;
+            case 'week':
+                const weekStart = new Date(today);
+                weekStart.setDate(weekStart.getDate() - 6);
+                startDate = weekStart.toISOString().split('T')[0];
+                endDate = todayStr;
+                break;
+            case 'month':
+                const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                startDate = monthStart.toISOString().split('T')[0];
+                endDate = todayStr;
+                break;
+            default:
+                // 自定义日期
+                if (mode && mode !== '') {
+                    startDate = mode;
+                    endDate = mode;
+                } else {
+                    startDate = todayStr;
+                    endDate = todayStr;
+                }
+        }
+
+        // 获取所有记录
+        let allDeposits = (allData.deposits || []).map(r => ({ ...r, type: 'deposit' }));
+        let allWithdraws = (allData.withdraws || []).map(r => ({ ...r, type: 'withdraw' }));
+
+        // 为记录添加日期（如果没有日期字段，使用今天）
+        const todayForRecord = new Date().toISOString().split('T')[0];
+        allDeposits = allDeposits.map(r => ({ ...r, date: r.date || todayForRecord }));
+        allWithdraws = allWithdraws.map(r => ({ ...r, date: r.date || todayForRecord }));
+
+        // 合并所有记录
+        allRecords = [...allDeposits, ...allWithdraws];
+
+        // 按日期筛选
+        let filtered = allRecords;
+        if (startDate && endDate) {
+            filtered = allRecords.filter(r => {
+                const rDate = r.date || todayForRecord;
+                return rDate >= startDate && rDate <= endDate;
+            });
+        }
+
+        const deposits = filtered.filter(r => r.type === 'deposit');
+        const withdraws = filtered.filter(r => r.type === 'withdraw');
+
+        return { deposits, withdraws, startDate, endDate };
     }
 
     // ================================================================
     //  渲染账单
     // ================================================================
-    function renderBill(selectedDate) {
-        const allData = getDataFromURL();
+    function renderBill(mode) {
+        allData = getDataFromURL();
         if (!allData) {
             document.getElementById('depositList').innerHTML =
                 '<div class="error-state"><span class="error-icon">❌</span><div class="error-title">未找到账单数据</div><div class="error-desc">请重新从机器人获取链接</div></div>';
             document.getElementById('withdrawList').innerHTML = '';
+            document.getElementById('totalDeposit').textContent = '0';
+            document.getElementById('totalDepositUsd').textContent = '0U';
+            document.getElementById('totalWithdraw').textContent = '0U';
+            document.getElementById('balance').textContent = '0U';
+            document.getElementById('exchange').textContent = '-';
+            document.getElementById('rate').textContent = '-';
             return;
         }
 
         const exchange = allData.exchange || 1;
         const rate = allData.rate || 0;
 
-        // 获取所有记录（带日期）
-        let allDeposits = (allData.deposits || []).map(r => ({ ...r, type: 'deposit' }));
-        let allWithdraws = (allData.withdraws || []).map(r => ({ ...r, type: 'withdraw' }));
-
-        // 如果记录没有日期字段，添加今天的日期
-        const today = new Date().toISOString().split('T')[0];
-        allDeposits = allDeposits.map(r => ({ ...r, date: r.date || today }));
-        allWithdraws = allWithdraws.map(r => ({ ...r, date: r.date || today }));
-
-        let allRecords = [...allDeposits, ...allWithdraws];
-
-        // 按日期筛选
-        let filtered = allRecords;
-        if (selectedDate) {
-            filtered = allRecords.filter(r => r.date === selectedDate);
-        }
-
-        const deposits = filtered.filter(r => r.type === 'deposit');
-        const withdraws = filtered.filter(r => r.type === 'withdraw');
+        // 获取筛选结果
+        const result = filterRecords(mode);
+        const deposits = result.deposits;
+        const withdraws = result.withdraws;
 
         const totalDepositRaw = deposits.reduce((sum, r) => sum + (r.raw_amount || 0), 0);
         const totalDepositUsd = deposits.reduce((sum, r) => sum + (r.amount || 0), 0);
@@ -324,7 +391,17 @@
         const now = new Date();
         const timeStr = now.getFullYear() + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + String(now.getDate()).padStart(2, '0') + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
         document.getElementById('headerTime').textContent = '📅 ' + timeStr;
-        document.getElementById('footerInfo').textContent = '📅 ' + timeStr + (selectedDate ? ' · 查询日期: ' + selectedDate : '');
+
+        // 显示筛选范围
+        let dateRange = '';
+        if (result.startDate && result.endDate) {
+            if (result.startDate === result.endDate) {
+                dateRange = ' · 日期: ' + result.startDate;
+            } else {
+                dateRange = ' · 范围: ' + result.startDate + ' ~ ' + result.endDate;
+            }
+        }
+        document.getElementById('footerInfo').textContent = '📅 ' + timeStr + dateRange;
 
         // 渲染入款
         const depositList = document.getElementById('depositList');
@@ -402,27 +479,25 @@
             quickBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
 
-            const days = parseInt(this.dataset.days);
-            const date = new Date();
-            date.setDate(date.getDate() - days);
-            const dateStr = date.toISOString().split('T')[0];
-            datePicker.value = dateStr;
-
-            renderBill(dateStr);
+            const mode = this.dataset.mode;
+            renderBill(mode);
         });
     });
 
-    // 日期选择器变化
+    // 日期选择器变化（自定义日期）
     datePicker.addEventListener('change', function() {
         quickBtns.forEach(b => b.classList.remove('active'));
-        renderBill(this.value);
+        const dateStr = this.value;
+        if (dateStr) {
+            renderBill(dateStr);
+        }
     });
 
     // ================================================================
-    //  初始化
+    //  初始化 - 默认显示今日
     // ================================================================
     document.addEventListener('DOMContentLoaded', function() {
-        renderBill(today);
+        renderBill('today');
     });
 </script>
 </body>
