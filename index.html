@@ -3,638 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📋 三国支付 · 完整账单</title>
+    <title>📋 完整账单查询</title>
     <style>
-        /* ============================================================
-                   全局基础样式
-                   ============================================================ */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #0b0f1a; color: #e8edf5; padding: 20px; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; }
+        .container { max-width: 1000px; width: 100%; background: linear-gradient(160deg, #141c30 0%, #0e1628 100%); border-radius: 32px; padding: 32px 30px 28px; box-shadow: 0 24px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.04); }
+        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid rgba(79,195,247,0.08); }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .header-logo { width: 44px; height: 44px; background: linear-gradient(135deg, #4fc3f7, #0288d1); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 16px rgba(79,195,247,0.2); }
+        .header h1 { color: #e8edf5; font-size: 24px; font-weight: 700; letter-spacing: 0.5px; }
+        .header h1 span { color: #4fc3f7; }
+        .header-badge { background: rgba(79,195,247,0.1); padding: 4px 16px; border-radius: 20px; font-size: 12px; color: #81d4fa; border: 1px solid rgba(79,195,247,0.08); font-weight: 500; }
+        .header-time { color: #546e7a; font-size: 13px; background: rgba(255,255,255,0.03); padding: 6px 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.04); }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
-            background: #0b0f1a;
-            color: #e8edf5;
-            padding: 24px;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-        }
+        /* 日期选择器 */
+        .date-picker { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; background: rgba(255,255,255,0.02); padding: 12px 18px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.04); }
+        .date-picker label { color: #78909c; font-size: 14px; font-weight: 500; }
+        .date-picker input[type="date"] { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: #e8edf5; padding: 8px 14px; border-radius: 10px; font-size: 14px; cursor: pointer; outline: none; }
+        .date-picker input[type="date"]:focus { border-color: #4fc3f7; }
+        .date-picker input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); cursor: pointer; }
+        .date-picker .quick-btns { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+        .date-picker .quick-btn { padding: 6px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.3s; background: rgba(255,255,255,0.06); color: #78909c; }
+        .date-picker .quick-btn:hover { background: rgba(255,255,255,0.12); color: #b0bec5; }
+        .date-picker .quick-btn.active { background: rgba(79,195,247,0.2); color: #4fc3f7; border: 1px solid rgba(79,195,247,0.2); }
 
-        /* ============================================================
-                   主容器 - 毛玻璃效果
-                   ============================================================ */
-        .container {
-            max-width: 1000px;
-            width: 100%;
-            background: linear-gradient(160deg, #141c30 0%, #0e1628 100%);
-            border-radius: 32px;
-            padding: 32px 30px 28px;
-            box-shadow:
-                0 24px 80px rgba(0, 0, 0, 0.7),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            backdrop-filter: blur(4px);
-            transition: all 0.3s ease;
-        }
+        .period-tabs { display: none; }
 
-        /* ============================================================
-                   头部区域
-                   ============================================================ */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-bottom: 28px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid rgba(79, 195, 247, 0.08);
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .header-logo {
-            width: 44px;
-            height: 44px;
-            background: linear-gradient(135deg, #4fc3f7, #0288d1);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            box-shadow: 0 4px 16px rgba(79, 195, 247, 0.2);
-        }
-
-        .header h1 {
-            color: #e8edf5;
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-        .header h1 span {
-            color: #4fc3f7;
-        }
-
-        .header-badge {
-            background: rgba(79, 195, 247, 0.1);
-            padding: 4px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            color: #81d4fa;
-            border: 1px solid rgba(79, 195, 247, 0.08);
-            font-weight: 500;
-        }
-
-        .header-time {
-            color: #546e7a;
-            font-size: 13px;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 6px 18px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            font-variant-numeric: tabular-nums;
-        }
-
-        /* ============================================================
-                   周期切换 - 现代化标签
-                   ============================================================ */
-        .period-tabs {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 28px;
-            background: rgba(255, 255, 255, 0.02);
-            padding: 5px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-        }
-
-        .period-tab {
-            padding: 10px 28px;
-            border: none;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: transparent;
-            color: #546e7a;
-            flex: 1;
-            min-width: 70px;
-            text-align: center;
-        }
-
-        .period-tab:hover {
-            color: #b0bec5;
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        .period-tab.active {
-            background: linear-gradient(135deg, #4fc3f7, #039be5);
-            color: #0b0f1a;
-            box-shadow: 0 4px 24px rgba(79, 195, 247, 0.2);
-            font-weight: 700;
-        }
-
-        /* ============================================================
-                   统计卡片 - 5列网格
-                   ============================================================ */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 14px;
-            margin-bottom: 32px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 18px;
-            padding: 18px 14px 16px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            border-radius: 18px 18px 0 0;
-        }
-
+        .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 32px; }
+        .stat-card { background: rgba(255,255,255,0.02); border-radius: 18px; padding: 18px 14px 16px; text-align: center; border: 1px solid rgba(255,255,255,0.04); transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 18px 18px 0 0; }
         .stat-card:nth-child(1)::before { background: linear-gradient(90deg, #43a047, #66bb6a); }
         .stat-card:nth-child(2)::before { background: linear-gradient(90deg, #e53935, #ef5350); }
         .stat-card:nth-child(3)::before { background: linear-gradient(90deg, #1e88e5, #4fc3f7); }
         .stat-card:nth-child(4)::before { background: linear-gradient(90deg, #f9a825, #ffd54f); }
         .stat-card:nth-child(5)::before { background: linear-gradient(90deg, #8e24aa, #ce93d8); }
-
-        .stat-card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        .stat-icon {
-            font-size: 18px;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        .stat-label {
-            font-size: 11px;
-            color: #546e7a;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            font-weight: 600;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 800;
-            margin-top: 4px;
-            letter-spacing: 0.3px;
-            font-variant-numeric: tabular-nums;
-        }
-
+        .stat-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.08); box-shadow: 0 8px 32px rgba(0,0,0,0.3); background: rgba(255,255,255,0.04); }
+        .stat-icon { font-size: 18px; display: block; margin-bottom: 4px; }
+        .stat-label { font-size: 11px; color: #546e7a; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+        .stat-value { font-size: 24px; font-weight: 800; margin-top: 4px; letter-spacing: 0.3px; font-variant-numeric: tabular-nums; }
         .stat-value.green { color: #66bb6a; }
         .stat-value.red { color: #ef5350; }
         .stat-value.blue { color: #4fc3f7; }
         .stat-value.gold { color: #ffd54f; }
         .stat-value.purple { color: #ce93d8; }
+        .stat-sub { font-size: 11px; color: #455a64; margin-top: 2px; font-weight: 400; }
 
-        .stat-sub {
-            font-size: 11px;
-            color: #455a64;
-            margin-top: 2px;
-            font-weight: 400;
-        }
+        .section { margin: 20px 0 6px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: rgba(255,255,255,0.02); border-radius: 14px; margin-bottom: 10px; border-left: 4px solid transparent; }
+        .section-header.deposit-header { border-left-color: #43a047; }
+        .section-header.withdraw-header { border-left-color: #e53935; }
+        .section-title { font-size: 15px; font-weight: 600; color: #e8edf5; display: flex; align-items: center; gap: 12px; }
+        .section-title .badge { padding: 2px 14px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+        .badge-deposit { background: rgba(76,175,80,0.12); color: #81c784; }
+        .badge-withdraw { background: rgba(229,57,53,0.12); color: #ef9a9a; }
+        .section-amount-summary { color: #546e7a; font-size: 13px; font-weight: 400; }
+        .section-amount-summary strong { color: #b0bec5; }
 
-        /* ============================================================
-                   记录区块
-                   ============================================================ */
-        .section {
-            margin: 20px 0 6px;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 18px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 14px;
-            margin-bottom: 10px;
-            border-left: 4px solid transparent;
-        }
-
-        .section-header.deposit-header {
-            border-left-color: #43a047;
-        }
-
-        .section-header.withdraw-header {
-            border-left-color: #e53935;
-        }
-
-        .section-title {
-            font-size: 15px;
-            font-weight: 600;
-            color: #e8edf5;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .section-title .badge {
-            padding: 2px 14px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .badge-deposit {
-            background: rgba(76, 175, 80, 0.12);
-            color: #81c784;
-        }
-
-        .badge-withdraw {
-            background: rgba(229, 57, 53, 0.12);
-            color: #ef9a9a;
-        }
-
-        .section-amount-summary {
-            color: #546e7a;
-            font-size: 13px;
-            font-weight: 400;
-        }
-
-        .section-amount-summary strong {
-            color: #b0bec5;
-        }
-
-        /* ============================================================
-                   单条记录 - 卡片式设计
-                   ============================================================ */
-        .record {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px 16px;
-            padding: 12px 18px;
-            margin: 4px 0;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            transition: all 0.25s ease;
-        }
-
-        .record:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.07);
-            transform: translateX(4px);
-        }
-
-        .record-deposit {
-            border-left: 3px solid #43a047;
-        }
-
-        .record-withdraw {
-            border-left: 3px solid #e53935;
-        }
-
-        .record-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
-            flex: 1;
-        }
-
-        .record-time {
-            color: #455a64;
-            font-size: 13px;
-            font-weight: 500;
-            min-width: 68px;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .record-raw {
-            color: #b0bec5;
-            font-weight: 500;
-            font-size: 15px;
-        }
-
-        .record-raw .operator {
-            color: #546e7a;
-            font-weight: 400;
-        }
-
-        .record-formula {
-            color: #455a64;
-            font-size: 12px;
-            background: rgba(255, 255, 255, 0.04);
-            padding: 2px 12px;
-            border-radius: 8px;
-            font-family: 'SF Mono', 'Menlo', 'Courier New', monospace;
-        }
-
-        .record-right {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
-
-        .record-amount {
-            font-weight: 700;
-            font-size: 16px;
-            font-variant-numeric: tabular-nums;
-        }
-
+        .record { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; padding: 12px 18px; margin: 4px 0; background: rgba(255,255,255,0.02); border-radius: 14px; border: 1px solid rgba(255,255,255,0.03); transition: all 0.25s ease; }
+        .record:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.07); transform: translateX(4px); }
+        .record-deposit { border-left: 3px solid #43a047; }
+        .record-withdraw { border-left: 3px solid #e53935; }
+        .record-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; flex: 1; }
+        .record-time { color: #455a64; font-size: 13px; font-weight: 500; min-width: 68px; font-variant-numeric: tabular-nums; }
+        .record-raw { color: #b0bec5; font-weight: 500; font-size: 15px; }
+        .record-formula { color: #455a64; font-size: 12px; background: rgba(255,255,255,0.04); padding: 2px 12px; border-radius: 8px; font-family: 'SF Mono', 'Menlo', 'Courier New', monospace; }
+        .record-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .record-amount { font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; }
         .record-amount.green { color: #66bb6a; }
         .record-amount.red { color: #ef5350; }
+        .record-tags { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .tag { font-size: 11px; padding: 2px 10px; border-radius: 10px; font-weight: 500; }
+        .tag-exchange { background: rgba(255,213,79,0.08); color: #ffd54f; border: 1px solid rgba(255,213,79,0.08); }
+        .tag-rate { background: rgba(206,147,216,0.08); color: #ce93d8; border: 1px solid rgba(206,147,216,0.08); }
+        .record-user { color: #546e7a; font-size: 12px; background: rgba(255,255,255,0.04); padding: 2px 12px; border-radius: 10px; font-weight: 400; }
 
-        .record-tags {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
+        .empty-state { text-align: center; padding: 44px 20px 36px; color: #455a64; }
+        .empty-state .empty-icon { font-size: 44px; display: block; margin-bottom: 12px; opacity: 0.3; }
+        .empty-state .empty-text { font-size: 15px; color: #546e7a; }
 
-        .tag {
-            font-size: 11px;
-            padding: 2px 10px;
-            border-radius: 10px;
-            font-weight: 500;
-        }
+        .footer { margin-top: 28px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.04); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; color: #455a64; font-size: 13px; }
+        .footer .total-badge { background: rgba(79,195,247,0.04); padding: 4px 18px; border-radius: 16px; border: 1px solid rgba(79,195,247,0.04); color: #546e7a; }
+        .footer .total-badge strong { color: #b0bec5; font-weight: 600; }
 
-        .tag-exchange {
-            background: rgba(255, 213, 79, 0.08);
-            color: #ffd54f;
-            border: 1px solid rgba(255, 213, 79, 0.08);
-        }
+        .error-state { text-align: center; padding: 60px 20px; }
+        .error-state .error-icon { font-size: 52px; display: block; margin-bottom: 16px; }
+        .error-state .error-title { color: #ef5350; font-size: 20px; font-weight: 600; }
+        .error-state .error-desc { color: #546e7a; font-size: 14px; margin-top: 8px; }
 
-        .tag-rate {
-            background: rgba(206, 147, 216, 0.08);
-            color: #ce93d8;
-            border: 1px solid rgba(206, 147, 216, 0.08);
-        }
-
-        .record-user {
-            color: #546e7a;
-            font-size: 12px;
-            background: rgba(255, 255, 255, 0.04);
-            padding: 2px 12px;
-            border-radius: 10px;
-            font-weight: 400;
-        }
-
-        /* ============================================================
-                   空状态
-                   ============================================================ */
-        .empty-state {
-            text-align: center;
-            padding: 44px 20px 36px;
-            color: #455a64;
-        }
-
-        .empty-state .empty-icon {
-            font-size: 44px;
-            display: block;
-            margin-bottom: 12px;
-            opacity: 0.3;
-        }
-
-        .empty-state .empty-text {
-            font-size: 15px;
-            color: #546e7a;
-        }
-
-        /* ============================================================
-                   底部信息
-                   ============================================================ */
-        .footer {
-            margin-top: 28px;
-            padding-top: 18px;
-            border-top: 1px solid rgba(255, 255, 255, 0.04);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            color: #455a64;
-            font-size: 13px;
-        }
-
-        .footer .total-badge {
-            background: rgba(79, 195, 247, 0.04);
-            padding: 4px 18px;
-            border-radius: 16px;
-            border: 1px solid rgba(79, 195, 247, 0.04);
-            color: #546e7a;
-        }
-
-        .footer .total-badge strong {
-            color: #b0bec5;
-            font-weight: 600;
-        }
-
-        /* ============================================================
-                   错误状态
-                   ============================================================ */
-        .error-state {
-            text-align: center;
-            padding: 60px 20px;
-        }
-
-        .error-state .error-icon {
-            font-size: 52px;
-            display: block;
-            margin-bottom: 16px;
-        }
-
-        .error-state .error-title {
-            color: #ef5350;
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        .error-state .error-desc {
-            color: #546e7a;
-            font-size: 14px;
-            margin-top: 8px;
-        }
-
-        /* ============================================================
-                   响应式设计
-                   ============================================================ */
-        @media (max-width: 900px) {
-            .stats-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
+        @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 768px) {
-            body {
-                padding: 12px;
-            }
-
-            .container {
-                padding: 18px 14px;
-                border-radius: 20px;
-            }
-
-            .header h1 {
-                font-size: 19px;
-            }
-            .header-logo {
-                width: 36px;
-                height: 36px;
-                font-size: 18px;
-            }
-            .header-time {
-                font-size: 11px;
-                padding: 4px 12px;
-            }
-            .header-badge {
-                font-size: 10px;
-                padding: 2px 12px;
-            }
-
-            .period-tab {
-                padding: 8px 12px;
-                font-size: 13px;
-                min-width: 50px;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 10px;
-            }
-            .stat-card {
-                padding: 12px 8px 10px;
-            }
-            .stat-value {
-                font-size: 18px;
-            }
-            .stat-label {
-                font-size: 10px;
-            }
-            .stat-icon {
-                font-size: 15px;
-            }
-
-            .record {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 6px;
-                padding: 12px 14px;
-            }
-            .record-left {
-                gap: 8px;
-            }
-            .record-time {
-                font-size: 12px;
-                min-width: auto;
-            }
-            .record-raw {
-                font-size: 14px;
-            }
-            .record-right {
-                justify-content: flex-start;
-                gap: 8px;
-            }
-            .record-amount {
-                font-size: 15px;
-            }
-            .record-formula {
-                font-size: 11px;
-            }
-            .tag {
-                font-size: 10px;
-                padding: 1px 8px;
-            }
-            .record-user {
-                font-size: 11px;
-            }
-
-            .section-header {
-                padding: 10px 14px;
-                flex-wrap: wrap;
-                gap: 6px;
-            }
-            .section-title {
-                font-size: 14px;
-            }
-            .section-amount-summary {
-                font-size: 12px;
-            }
-
-            .footer {
-                font-size: 12px;
-                flex-direction: column;
-                text-align: center;
-            }
+            body { padding: 12px; }
+            .container { padding: 18px 14px; border-radius: 20px; }
+            .header h1 { font-size: 19px; }
+            .header-logo { width: 36px; height: 36px; font-size: 18px; }
+            .header-time { font-size: 11px; padding: 4px 12px; }
+            .date-picker { flex-direction: column; align-items: stretch; gap: 10px; }
+            .date-picker .quick-btns { margin-left: 0; justify-content: center; }
+            .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+            .stat-card { padding: 12px 8px 10px; }
+            .stat-value { font-size: 18px; }
+            .stat-label { font-size: 10px; }
+            .stat-icon { font-size: 15px; }
+            .record { flex-direction: column; align-items: stretch; gap: 6px; padding: 12px 14px; }
+            .record-left { gap: 8px; }
+            .record-time { font-size: 12px; min-width: auto; }
+            .record-raw { font-size: 14px; }
+            .record-right { justify-content: flex-start; gap: 8px; }
+            .record-amount { font-size: 15px; }
+            .record-formula { font-size: 11px; }
+            .tag { font-size: 10px; padding: 1px 8px; }
+            .record-user { font-size: 11px; }
+            .section-header { padding: 10px 14px; flex-wrap: wrap; gap: 6px; }
+            .section-title { font-size: 14px; }
+            .footer { font-size: 12px; flex-direction: column; text-align: center; }
         }
-
         @media (max-width: 500px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .container {
-                padding: 12px 10px;
-                border-radius: 16px;
-            }
-            .header h1 {
-                font-size: 17px;
-            }
-            .header-left {
-                gap: 10px;
-            }
-            .header-logo {
-                width: 32px;
-                height: 32px;
-                font-size: 16px;
-            }
-            .period-tab {
-                font-size: 12px;
-                padding: 6px 8px;
-            }
-            .stat-value {
-                font-size: 16px;
-            }
-            .record {
-                padding: 10px 12px;
-            }
-            .record-raw {
-                font-size: 13px;
-            }
-            .record-amount {
-                font-size: 14px;
-            }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .container { padding: 12px 10px; border-radius: 16px; }
+            .header h1 { font-size: 17px; }
+            .date-picker input[type="date"] { font-size: 12px; padding: 6px 10px; }
+            .date-picker .quick-btn { font-size: 11px; padding: 4px 10px; }
         }
     </style>
 </head>
 <body>
-
 <div class="container">
 
-    <!-- ===== 头部 ===== -->
+    <!-- 头部 -->
     <div class="header">
         <div class="header-left">
             <div class="header-logo">💳</div>
@@ -644,14 +139,19 @@
         <div class="header-time" id="headerTime">加载中...</div>
     </div>
 
-    <!-- ===== 周期切换 ===== -->
-    <div class="period-tabs">
-        <button class="period-tab active" data-period="今日">📅 今日</button>
-        <button class="period-tab" data-period="本周">📅 本周</button>
-        <button class="period-tab" data-period="本月">📅 本月</button>
+    <!-- 日期选择器 -->
+    <div class="date-picker">
+        <label>📅 选择日期：</label>
+        <input type="date" id="datePicker">
+        <div class="quick-btns">
+            <button class="quick-btn active" data-days="0">今日</button>
+            <button class="quick-btn" data-days="1">昨日</button>
+            <button class="quick-btn" data-days="7">近7日</button>
+            <button class="quick-btn" data-days="30">本月</button>
+        </div>
     </div>
 
-    <!-- ===== 统计卡片 ===== -->
+    <!-- 统计卡片 -->
     <div class="stats-grid" id="stats">
         <div class="stat-card">
             <span class="stat-icon">📥</span>
@@ -685,7 +185,7 @@
         </div>
     </div>
 
-    <!-- ===== 入款记录 ===== -->
+    <!-- 入款记录 -->
     <div class="section">
         <div class="section-header deposit-header">
             <div class="section-title">
@@ -699,7 +199,7 @@
         <div id="depositList"></div>
     </div>
 
-    <!-- ===== 下发记录 ===== -->
+    <!-- 下发记录 -->
     <div class="section">
         <div class="section-header withdraw-header">
             <div class="section-title">
@@ -713,7 +213,7 @@
         <div id="withdrawList"></div>
     </div>
 
-    <!-- ===== 底部 ===== -->
+    <!-- 底部 -->
     <div class="footer">
         <span id="footerInfo">📅 加载中...</span>
         <span class="total-badge">📊 共 <strong id="totalRecords">0</strong> 条记录</span>
@@ -725,6 +225,8 @@
     // ================================================================
     //  从 URL 参数获取数据
     // ================================================================
+    let allRecords = [];
+
     function getDataFromURL() {
         const params = new URLSearchParams(window.location.search);
         const dataParam = params.get('data');
@@ -744,9 +246,6 @@
         }
     }
 
-    // ================================================================
-    //  格式化数字（千位分隔符）
-    // ================================================================
     function formatNumber(num) {
         if (num === undefined || num === null) return '0';
         const parts = num.toString().split('.');
@@ -755,140 +254,176 @@
     }
 
     // ================================================================
+    //  根据日期筛选记录
+    // ================================================================
+    function filterByDate(records, dateStr) {
+        if (!dateStr) return records;
+        // dateStr 格式: YYYY-MM-DD
+        return records.filter(r => {
+            // 记录时间格式 HH:MM:SS，需要从原始数据中获取日期
+            // 如果记录没有日期，则用今天的日期
+            const recordDate = r.date || new Date().toISOString().split('T')[0];
+            return recordDate === dateStr;
+        });
+    }
+
+    // ================================================================
     //  渲染账单
     // ================================================================
-    function renderBill(period) {
+    function renderBill(selectedDate) {
         const allData = getDataFromURL();
         if (!allData) {
-            document.getElementById('depositList').innerHTML = `
-                        <div class="error-state">
-                            <span class="error-icon">❌</span>
-                            <div class="error-title">未找到账单数据</div>
-                            <div class="error-desc">请重新从机器人获取链接</div>
-                        </div>
-                    `;
+            document.getElementById('depositList').innerHTML =
+                '<div class="error-state"><span class="error-icon">❌</span><div class="error-title">未找到账单数据</div><div class="error-desc">请重新从机器人获取链接</div></div>';
             document.getElementById('withdrawList').innerHTML = '';
             return;
         }
 
         const exchange = allData.exchange || 1;
         const rate = allData.rate || 0;
-        const rateFactor = (1 - rate / 100).toFixed(2);
 
-        // ----- 统计卡片 -----
-        document.getElementById('totalDeposit').textContent = formatNumber(allData.totalDepositRaw) || '0';
-        document.getElementById('totalDepositUsd').textContent = (allData.totalDepositUsd || 0).toFixed(2) + ' U';
-        document.getElementById('totalWithdraw').textContent = (allData.totalWithdraw || 0).toFixed(2) + ' U';
-        document.getElementById('balance').textContent = (allData.balance || 0).toFixed(2) + ' U';
+        // 获取所有记录（带日期）
+        let allDeposits = (allData.deposits || []).map(r => ({ ...r, type: 'deposit' }));
+        let allWithdraws = (allData.withdraws || []).map(r => ({ ...r, type: 'withdraw' }));
+
+        // 如果记录没有日期字段，添加今天的日期
+        const today = new Date().toISOString().split('T')[0];
+        allDeposits = allDeposits.map(r => ({ ...r, date: r.date || today }));
+        allWithdraws = allWithdraws.map(r => ({ ...r, date: r.date || today }));
+
+        let allRecords = [...allDeposits, ...allWithdraws];
+
+        // 按日期筛选
+        let filtered = allRecords;
+        if (selectedDate) {
+            filtered = allRecords.filter(r => r.date === selectedDate);
+        }
+
+        const deposits = filtered.filter(r => r.type === 'deposit');
+        const withdraws = filtered.filter(r => r.type === 'withdraw');
+
+        const totalDepositRaw = deposits.reduce((sum, r) => sum + (r.raw_amount || 0), 0);
+        const totalDepositUsd = deposits.reduce((sum, r) => sum + (r.amount || 0), 0);
+        const totalWithdraw = withdraws.reduce((sum, r) => sum + (r.amount || 0), 0);
+        const balance = totalDepositUsd - totalWithdraw;
+
+        // 更新统计
+        document.getElementById('totalDeposit').textContent = formatNumber(totalDepositRaw) || '0';
+        document.getElementById('totalDepositUsd').textContent = totalDepositUsd.toFixed(2) + ' U';
+        document.getElementById('totalWithdraw').textContent = totalWithdraw.toFixed(2) + ' U';
+        document.getElementById('balance').textContent = balance.toFixed(2) + ' U';
         document.getElementById('exchange').textContent = exchange;
         document.getElementById('rate').textContent = rate + '%';
 
-        // ----- 获取记录 -----
-        let deposits = allData.deposits || [];
-        let withdraws = allData.withdraws || [];
-
-        // ----- 更新计数 -----
-        const depositTotal = deposits.reduce((sum, r) => sum + (r.amount || 0), 0);
-        const withdrawTotal = withdraws.reduce((sum, r) => sum + (r.amount || 0), 0);
-
         document.getElementById('depositCount').textContent = deposits.length + ' 笔';
         document.getElementById('withdrawCount').textContent = withdraws.length + ' 笔';
-        document.getElementById('depositTotalSummary').textContent = depositTotal.toFixed(2) + ' U';
-        document.getElementById('withdrawTotalSummary').textContent = withdrawTotal.toFixed(2) + ' U';
+        document.getElementById('depositTotalSummary').textContent = totalDepositUsd.toFixed(2) + ' U';
+        document.getElementById('withdrawTotalSummary').textContent = totalWithdraw.toFixed(2) + ' U';
         document.getElementById('totalRecords').textContent = deposits.length + withdraws.length;
 
         const now = new Date();
-        const timeStr = now.getFullYear() + '/' +
-            String(now.getMonth() + 1).padStart(2, '0') + '/' +
-            String(now.getDate()).padStart(2, '0') + ' ' +
-            String(now.getHours()).padStart(2, '0') + ':' +
-            String(now.getMinutes()).padStart(2, '0');
+        const timeStr = now.getFullYear() + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + String(now.getDate()).padStart(2, '0') + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
         document.getElementById('headerTime').textContent = '📅 ' + timeStr;
-        document.getElementById('footerInfo').textContent = '📅 ' + timeStr;
+        document.getElementById('footerInfo').textContent = '📅 ' + timeStr + (selectedDate ? ' · 查询日期: ' + selectedDate : '');
 
-        // ----- 渲染入款 -----
+        // 渲染入款
         const depositList = document.getElementById('depositList');
         if (deposits.length === 0) {
-            depositList.innerHTML = `
-                        <div class="empty-state">
-                            <span class="empty-icon">📭</span>
-                            <div class="empty-text">暂无入款记录</div>
-                        </div>
-                    `;
+            depositList.innerHTML = '<div class="empty-state"><span class="empty-icon">📭</span><div class="empty-text">暂无入款记录</div></div>';
         } else {
             depositList.innerHTML = deposits.map(r => {
                 const rawDisplay = r.raw_display || r.raw_amount || 0;
                 const amountUsd = r.amount || 0;
+                const recRate = r.rate !== undefined ? r.rate : rate;
+                const recExchange = r.exchange !== undefined ? r.exchange : exchange;
+                const rateFactor = (1 - recRate / 100).toFixed(2);
                 return `
-                            <div class="record record-deposit">
-                                <div class="record-left">
-                                    <span class="record-time">${r.time || ''}</span>
-                                    <span class="record-raw">+${rawDisplay}</span>
-                                    <span class="record-formula">/ ${exchange} × (${rateFactor})</span>
-                                </div>
-                                <div class="record-right">
-                                    <span class="record-amount green">${amountUsd.toFixed(2)} U</span>
-                                    <div class="record-tags">
-                                        <span class="tag tag-exchange">💱 ${exchange}</span>
-                                        <span class="tag tag-rate">📊 ${rate}%</span>
-                                    </div>
-                                    <span class="record-user">${r.username || '未知用户'}</span>
-                                </div>
+                        <div class="record record-deposit">
+                            <div class="record-left">
+                                <span class="record-time">${r.time || ''}</span>
+                                <span class="record-raw">+${rawDisplay}</span>
+                                <span class="record-formula">/ ${recExchange} × (${rateFactor})</span>
                             </div>
-                        `;
+                            <div class="record-right">
+                                <span class="record-amount green">${amountUsd.toFixed(2)} U</span>
+                                <div class="record-tags">
+                                    <span class="tag tag-exchange">💱 ${recExchange}</span>
+                                    <span class="tag tag-rate">📊 ${recRate}%</span>
+                                </div>
+                                <span class="record-user">${r.username || '未知用户'}</span>
+                            </div>
+                        </div>
+                    `;
             }).join('');
         }
 
-        // ----- 渲染下发 -----
+        // 渲染下发
         const withdrawList = document.getElementById('withdrawList');
         if (withdraws.length === 0) {
-            withdrawList.innerHTML = `
-                        <div class="empty-state">
-                            <span class="empty-icon">📭</span>
-                            <div class="empty-text">暂无下发记录</div>
-                        </div>
-                    `;
+            withdrawList.innerHTML = '<div class="empty-state"><span class="empty-icon">📭</span><div class="empty-text">暂无下发记录</div></div>';
         } else {
             withdrawList.innerHTML = withdraws.map(r => {
                 const amountUsd = r.amount || 0;
+                const recRate = r.rate !== undefined ? r.rate : rate;
+                const recExchange = r.exchange !== undefined ? r.exchange : exchange;
                 return `
-                            <div class="record record-withdraw">
-                                <div class="record-left">
-                                    <span class="record-time">${r.time || ''}</span>
-                                    <span class="record-raw">📤 下发</span>
-                                </div>
-                                <div class="record-right">
-                                    <span class="record-amount red">-${amountUsd.toFixed(2)} U</span>
-                                    <div class="record-tags">
-                                        <span class="tag tag-exchange">💱 ${exchange}</span>
-                                        <span class="tag tag-rate">📊 ${rate}%</span>
-                                    </div>
-                                    <span class="record-user">${r.username || '未知用户'}</span>
-                                </div>
+                        <div class="record record-withdraw">
+                            <div class="record-left">
+                                <span class="record-time">${r.time || ''}</span>
+                                <span class="record-raw">📤 下发</span>
                             </div>
-                        `;
+                            <div class="record-right">
+                                <span class="record-amount red">-${amountUsd.toFixed(2)} U</span>
+                                <div class="record-tags">
+                                    <span class="tag tag-exchange">💱 ${recExchange}</span>
+                                    <span class="tag tag-rate">📊 ${recRate}%</span>
+                                </div>
+                                <span class="record-user">${r.username || '未知用户'}</span>
+                            </div>
+                        </div>
+                    `;
             }).join('');
         }
     }
 
     // ================================================================
-    //  切换周期
+    //  日期选择器逻辑
     // ================================================================
-    document.querySelectorAll('.period-tab').forEach(tab => {
-        tab.addEventListener('click', function () {
-            document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+    const datePicker = document.getElementById('datePicker');
+    const quickBtns = document.querySelectorAll('.quick-btn');
+
+    // 设置今天的日期为默认值
+    const today = new Date().toISOString().split('T')[0];
+    datePicker.value = today;
+
+    // 快速按钮点击
+    quickBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            quickBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            renderBill(this.dataset.period);
+
+            const days = parseInt(this.dataset.days);
+            const date = new Date();
+            date.setDate(date.getDate() - days);
+            const dateStr = date.toISOString().split('T')[0];
+            datePicker.value = dateStr;
+
+            renderBill(dateStr);
         });
+    });
+
+    // 日期选择器变化
+    datePicker.addEventListener('change', function() {
+        quickBtns.forEach(b => b.classList.remove('active'));
+        renderBill(this.value);
     });
 
     // ================================================================
     //  初始化
     // ================================================================
-    document.addEventListener('DOMContentLoaded', function () {
-        renderBill('今日');
+    document.addEventListener('DOMContentLoaded', function() {
+        renderBill(today);
     });
 </script>
-
 </body>
 </html>
