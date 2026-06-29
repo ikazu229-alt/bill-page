@@ -277,7 +277,7 @@
                 break;
             case 'week':
                 const weekStart = new Date(today);
-                weekStart.setDate(weekStart.getDate() - 6);
+                weekStart.setDate(weekStart.getDate() - 7);
                 startDate = weekStart.toISOString().split('T')[0];
                 endDate = todayStr;
                 break;
@@ -473,10 +473,11 @@
     const datePicker = document.getElementById('datePicker');
     const quickBtns = document.querySelectorAll('.quick-btn');
 
+    // 设置今天的日期为默认值
     const today = new Date().toISOString().split('T')[0];
     datePicker.value = today;
 
-    // 快速按钮点击 - 先清除所有 active，再给当前按钮加 active
+    // 快速按钮点击
     quickBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             quickBtns.forEach(b => b.classList.remove('active'));
@@ -486,7 +487,7 @@
         });
     });
 
-    // 日期选择器变化 - 清除所有按钮的 active 状态
+    // 日期选择器变化（手动选择日期）
     datePicker.addEventListener('change', function() {
         quickBtns.forEach(b => b.classList.remove('active'));
         const dateStr = this.value;
