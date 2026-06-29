@@ -3,11 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📋 完整账单查询</title>
+    <title>📋 三国支付 · 完整账单</title>
     <style>
+        /* ===== 全局重置 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #0b0f1a; color: #e8edf5; padding: 20px; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; }
+
+        /* ===== 主容器 ===== */
         .container { max-width: 1000px; width: 100%; background: linear-gradient(160deg, #141c30 0%, #0e1628 100%); border-radius: 32px; padding: 32px 30px 28px; box-shadow: 0 24px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.04); }
+
+        /* ===== 头部 ===== */
         .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid rgba(79,195,247,0.08); }
         .header-left { display: flex; align-items: center; gap: 14px; }
         .header-logo { width: 44px; height: 44px; background: linear-gradient(135deg, #4fc3f7, #0288d1); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 16px rgba(79,195,247,0.2); }
@@ -16,7 +21,7 @@
         .header-badge { background: rgba(79,195,247,0.1); padding: 4px 16px; border-radius: 20px; font-size: 12px; color: #81d4fa; border: 1px solid rgba(79,195,247,0.08); font-weight: 500; }
         .header-time { color: #546e7a; font-size: 13px; background: rgba(255,255,255,0.03); padding: 6px 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.04); }
 
-        /* 日期选择器 */
+        /* ===== 日期选择器 ===== */
         .date-picker { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; background: rgba(255,255,255,0.02); padding: 12px 18px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.04); }
         .date-picker label { color: #78909c; font-size: 14px; font-weight: 500; }
         .date-picker input[type="date"] { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: #e8edf5; padding: 8px 14px; border-radius: 10px; font-size: 14px; cursor: pointer; outline: none; }
@@ -27,9 +32,8 @@
         .date-picker .quick-btn:hover { background: rgba(255,255,255,0.12); color: #b0bec5; }
         .date-picker .quick-btn.active { background: rgba(79,195,247,0.2); color: #4fc3f7; border: 1px solid rgba(79,195,247,0.2); }
 
-        .period-tabs { display: none; }
-
-        .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 32px; }
+        /* ===== 统计卡片 ===== */
+        .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 20px; }
         .stat-card { background: rgba(255,255,255,0.02); border-radius: 18px; padding: 18px 14px 16px; text-align: center; border: 1px solid rgba(255,255,255,0.04); transition: all 0.3s ease; position: relative; overflow: hidden; }
         .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 18px 18px 0 0; }
         .stat-card:nth-child(1)::before { background: linear-gradient(90deg, #43a047, #66bb6a); }
@@ -48,6 +52,15 @@
         .stat-value.purple { color: #ce93d8; }
         .stat-sub { font-size: 11px; color: #455a64; margin-top: 2px; font-weight: 400; }
 
+        /* ===== 统计图例 ===== */
+        .stats-legend { display: flex; justify-content: center; gap: 24px; margin-bottom: 16px; font-size: 12px; color: #546e7a; flex-wrap: wrap; }
+        .stats-legend span { display: flex; align-items: center; gap: 6px; }
+        .stats-legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+        .stats-legend .dot.green { background: #66bb6a; }
+        .stats-legend .dot.red { background: #ef5350; }
+        .stats-legend .dot.blue { background: #4fc3f7; }
+
+        /* ===== 记录区块 ===== */
         .section { margin: 20px 0 6px; }
         .section-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: rgba(255,255,255,0.02); border-radius: 14px; margin-bottom: 10px; border-left: 4px solid transparent; }
         .section-header.deposit-header { border-left-color: #43a047; }
@@ -59,6 +72,7 @@
         .section-amount-summary { color: #546e7a; font-size: 13px; font-weight: 400; }
         .section-amount-summary strong { color: #b0bec5; }
 
+        /* ===== 单条记录 ===== */
         .record { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; padding: 12px 18px; margin: 4px 0; background: rgba(255,255,255,0.02); border-radius: 14px; border: 1px solid rgba(255,255,255,0.03); transition: all 0.25s ease; }
         .record:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.07); transform: translateX(4px); }
         .record-deposit { border-left: 3px solid #43a047; }
@@ -81,6 +95,7 @@
         .empty-state .empty-icon { font-size: 44px; display: block; margin-bottom: 12px; opacity: 0.3; }
         .empty-state .empty-text { font-size: 15px; color: #546e7a; }
 
+        /* ===== 底部 ===== */
         .footer { margin-top: 28px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.04); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; color: #455a64; font-size: 13px; }
         .footer .total-badge { background: rgba(79,195,247,0.04); padding: 4px 18px; border-radius: 16px; border: 1px solid rgba(79,195,247,0.04); color: #546e7a; }
         .footer .total-badge strong { color: #b0bec5; font-weight: 600; }
@@ -90,14 +105,7 @@
         .error-state .error-title { color: #ef5350; font-size: 20px; font-weight: 600; }
         .error-state .error-desc { color: #546e7a; font-size: 14px; margin-top: 8px; }
 
-        /* 统计说明 */
-        .stats-note { display: flex; justify-content: center; gap: 20px; margin-bottom: 10px; font-size: 12px; color: #546e7a; flex-wrap: wrap; }
-        .stats-note span { display: flex; align-items: center; gap: 4px; }
-        .stats-note .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; }
-        .stats-note .dot.green { background: #66bb6a; }
-        .stats-note .dot.red { background: #ef5350; }
-        .stats-note .dot.blue { background: #4fc3f7; }
-
+        /* ===== 响应式 ===== */
         @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 768px) {
             body { padding: 12px; }
@@ -137,7 +145,7 @@
 <body>
 <div class="container">
 
-    <!-- 头部 -->
+    <!-- ===== 头部 ===== -->
     <div class="header">
         <div class="header-left">
             <div class="header-logo">💳</div>
@@ -147,7 +155,7 @@
         <div class="header-time" id="headerTime">加载中...</div>
     </div>
 
-    <!-- 日期选择器 -->
+    <!-- ===== 日期选择器 ===== -->
     <div class="date-picker">
         <label>📅 选择日期：</label>
         <input type="date" id="datePicker">
@@ -156,10 +164,11 @@
             <button class="quick-btn" data-mode="yesterday">昨日</button>
             <button class="quick-btn" data-mode="week">近7日</button>
             <button class="quick-btn" data-mode="month">本月</button>
+            <button class="quick-btn" data-mode="all">全部</button>
         </div>
     </div>
 
-    <!-- 统计卡片 -->
+    <!-- ===== 统计卡片 ===== -->
     <div class="stats-grid" id="stats">
         <div class="stat-card">
             <span class="stat-icon">📥</span>
@@ -193,14 +202,15 @@
         </div>
     </div>
 
-    <!-- 统计说明 -->
-    <div class="stats-note">
+    <!-- ===== 统计图例 ===== -->
+    <div class="stats-legend">
         <span><span class="dot green"></span>入款</span>
         <span><span class="dot red"></span>下发</span>
         <span><span class="dot blue"></span>余额</span>
+        <span>📊 显示所选日期的账单记录</span>
     </div>
 
-    <!-- 入款记录 -->
+    <!-- ===== 入款记录 ===== -->
     <div class="section">
         <div class="section-header deposit-header">
             <div class="section-title">
@@ -214,7 +224,7 @@
         <div id="depositList"></div>
     </div>
 
-    <!-- 下发记录 -->
+    <!-- ===== 下发记录 ===== -->
     <div class="section">
         <div class="section-header withdraw-header">
             <div class="section-title">
@@ -228,7 +238,7 @@
         <div id="withdrawList"></div>
     </div>
 
-    <!-- 底部 -->
+    <!-- ===== 底部 ===== -->
     <div class="footer">
         <span id="footerInfo">📅 加载中...</span>
         <span class="total-badge">📊 共 <strong id="totalRecords">0</strong> 条记录</span>
@@ -238,10 +248,10 @@
 
 <script>
     // ================================================================
-    //  从 URL 参数获取数据
+    //  数据解析
     // ================================================================
-    let allRecords = [];
     let allData = null;
+    let allRecords = [];
 
     function getDataFromURL() {
         const params = new URLSearchParams(window.location.search);
@@ -270,10 +280,10 @@
     }
 
     // ================================================================
-    //  根据模式筛选记录
+    //  筛选逻辑
     // ================================================================
     function filterRecords(mode) {
-        if (!allData) return { deposits: [], withdraws: [] };
+        if (!allData) return { deposits: [], withdraws: [], startDate: null, endDate: null };
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -290,9 +300,8 @@
             case 'yesterday':
                 const yesterday = new Date(today);
                 yesterday.setDate(yesterday.getDate() - 1);
-                const yStr = yesterday.toISOString().split('T')[0];
-                startDate = yStr;
-                endDate = yStr;
+                startDate = yesterday.toISOString().split('T')[0];
+                endDate = startDate;
                 break;
             case 'week':
                 const weekStart = new Date(today);
@@ -304,6 +313,10 @@
                 const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
                 startDate = monthStart.toISOString().split('T')[0];
                 endDate = todayStr;
+                break;
+            case 'all':
+                startDate = '1970-01-01';
+                endDate = '2099-12-31';
                 break;
             default:
                 // 自定义日期
@@ -321,9 +334,9 @@
         let allWithdraws = (allData.withdraws || []).map(r => ({ ...r, type: 'withdraw' }));
 
         // 为记录添加日期（如果没有日期字段，使用今天）
-        const todayForRecord = new Date().toISOString().split('T')[0];
-        allDeposits = allDeposits.map(r => ({ ...r, date: r.date || todayForRecord }));
-        allWithdraws = allWithdraws.map(r => ({ ...r, date: r.date || todayForRecord }));
+        const defaultDate = new Date().toISOString().split('T')[0];
+        allDeposits = allDeposits.map(r => ({ ...r, date: r.date || defaultDate }));
+        allWithdraws = allWithdraws.map(r => ({ ...r, date: r.date || defaultDate }));
 
         // 合并所有记录
         allRecords = [...allDeposits, ...allWithdraws];
@@ -332,10 +345,17 @@
         let filtered = allRecords;
         if (startDate && endDate) {
             filtered = allRecords.filter(r => {
-                const rDate = r.date || todayForRecord;
+                const rDate = r.date || defaultDate;
                 return rDate >= startDate && rDate <= endDate;
             });
         }
+
+        // 按时间排序
+        filtered.sort((a, b) => {
+            const timeA = a.time || '00:00:00';
+            const timeB = b.time || '00:00:00';
+            return timeA.localeCompare(timeB);
+        });
 
         const deposits = filtered.filter(r => r.type === 'deposit');
         const withdraws = filtered.filter(r => r.type === 'withdraw');
@@ -344,27 +364,34 @@
     }
 
     // ================================================================
-    //  渲染账单
+    //  渲染
     // ================================================================
     function renderBill(mode) {
         allData = getDataFromURL();
+
         if (!allData) {
             document.getElementById('depositList').innerHTML =
                 '<div class="error-state"><span class="error-icon">❌</span><div class="error-title">未找到账单数据</div><div class="error-desc">请重新从机器人获取链接</div></div>';
             document.getElementById('withdrawList').innerHTML = '';
             document.getElementById('totalDeposit').textContent = '0';
-            document.getElementById('totalDepositUsd').textContent = '0U';
-            document.getElementById('totalWithdraw').textContent = '0U';
-            document.getElementById('balance').textContent = '0U';
+            document.getElementById('totalDepositUsd').textContent = '0 U';
+            document.getElementById('totalWithdraw').textContent = '0 U';
+            document.getElementById('balance').textContent = '0 U';
             document.getElementById('exchange').textContent = '-';
             document.getElementById('rate').textContent = '-';
+            document.getElementById('depositCount').textContent = '0 笔';
+            document.getElementById('withdrawCount').textContent = '0 笔';
+            document.getElementById('depositTotalSummary').textContent = '0 U';
+            document.getElementById('withdrawTotalSummary').textContent = '0 U';
+            document.getElementById('totalRecords').textContent = '0';
+            document.getElementById('headerTime').textContent = '📅 ' + new Date().toLocaleString();
+            document.getElementById('footerInfo').textContent = '📅 加载中...';
             return;
         }
 
         const exchange = allData.exchange || 1;
         const rate = allData.rate || 0;
 
-        // 获取筛选结果
         const result = filterRecords(mode);
         const deposits = result.deposits;
         const withdraws = result.withdraws;
@@ -374,7 +401,7 @@
         const totalWithdraw = withdraws.reduce((sum, r) => sum + (r.amount || 0), 0);
         const balance = totalDepositUsd - totalWithdraw;
 
-        // 更新统计
+        // 更新统计卡片
         document.getElementById('totalDeposit').textContent = formatNumber(totalDepositRaw) || '0';
         document.getElementById('totalDepositUsd').textContent = totalDepositUsd.toFixed(2) + ' U';
         document.getElementById('totalWithdraw').textContent = totalWithdraw.toFixed(2) + ' U';
@@ -389,12 +416,21 @@
         document.getElementById('totalRecords').textContent = deposits.length + withdraws.length;
 
         const now = new Date();
-        const timeStr = now.getFullYear() + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + String(now.getDate()).padStart(2, '0') + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+        const timeStr = now.toLocaleString('zh-CN', { hour12: false });
         document.getElementById('headerTime').textContent = '📅 ' + timeStr;
 
         // 显示筛选范围
         let dateRange = '';
-        if (result.startDate && result.endDate) {
+        const modeNames = {
+            'today': '今日',
+            'yesterday': '昨日',
+            'week': '近7日',
+            'month': '本月',
+            'all': '全部'
+        };
+        if (modeNames[mode]) {
+            dateRange = ' · 显示: ' + modeNames[mode];
+        } else if (result.startDate && result.endDate) {
             if (result.startDate === result.endDate) {
                 dateRange = ' · 日期: ' + result.startDate;
             } else {
@@ -415,22 +451,22 @@
                 const recExchange = r.exchange !== undefined ? r.exchange : exchange;
                 const rateFactor = (1 - recRate / 100).toFixed(2);
                 return `
-                        <div class="record record-deposit">
-                            <div class="record-left">
-                                <span class="record-time">${r.time || ''}</span>
-                                <span class="record-raw">+${rawDisplay}</span>
-                                <span class="record-formula">/ ${recExchange} × (${rateFactor})</span>
-                            </div>
-                            <div class="record-right">
-                                <span class="record-amount green">${amountUsd.toFixed(2)} U</span>
-                                <div class="record-tags">
-                                    <span class="tag tag-exchange">💱 ${recExchange}</span>
-                                    <span class="tag tag-rate">📊 ${recRate}%</span>
-                                </div>
-                                <span class="record-user">${r.username || '未知用户'}</span>
-                            </div>
+                    <div class="record record-deposit">
+                        <div class="record-left">
+                            <span class="record-time">${r.time || ''}</span>
+                            <span class="record-raw">+${rawDisplay}</span>
+                            <span class="record-formula">/ ${recExchange} × (${rateFactor})</span>
                         </div>
-                    `;
+                        <div class="record-right">
+                            <span class="record-amount green">${amountUsd.toFixed(2)} U</span>
+                            <div class="record-tags">
+                                <span class="tag tag-exchange">💱 ${recExchange}</span>
+                                <span class="tag tag-rate">📊 ${recRate}%</span>
+                            </div>
+                            <span class="record-user">${r.username || '未知用户'}</span>
+                        </div>
+                    </div>
+                `;
             }).join('');
         }
 
@@ -444,27 +480,27 @@
                 const recRate = r.rate !== undefined ? r.rate : rate;
                 const recExchange = r.exchange !== undefined ? r.exchange : exchange;
                 return `
-                        <div class="record record-withdraw">
-                            <div class="record-left">
-                                <span class="record-time">${r.time || ''}</span>
-                                <span class="record-raw">📤 下发</span>
-                            </div>
-                            <div class="record-right">
-                                <span class="record-amount red">-${amountUsd.toFixed(2)} U</span>
-                                <div class="record-tags">
-                                    <span class="tag tag-exchange">💱 ${recExchange}</span>
-                                    <span class="tag tag-rate">📊 ${recRate}%</span>
-                                </div>
-                                <span class="record-user">${r.username || '未知用户'}</span>
-                            </div>
+                    <div class="record record-withdraw">
+                        <div class="record-left">
+                            <span class="record-time">${r.time || ''}</span>
+                            <span class="record-raw">📤 下发</span>
                         </div>
-                    `;
+                        <div class="record-right">
+                            <span class="record-amount red">-${amountUsd.toFixed(2)} U</span>
+                            <div class="record-tags">
+                                <span class="tag tag-exchange">💱 ${recExchange}</span>
+                                <span class="tag tag-rate">📊 ${recRate}%</span>
+                            </div>
+                            <span class="record-user">${r.username || '未知用户'}</span>
+                        </div>
+                    </div>
+                `;
             }).join('');
         }
     }
 
     // ================================================================
-    //  日期选择器逻辑
+    //  控件绑定
     // ================================================================
     const datePicker = document.getElementById('datePicker');
     const quickBtns = document.querySelectorAll('.quick-btn');
@@ -478,13 +514,12 @@
         btn.addEventListener('click', function() {
             quickBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-
             const mode = this.dataset.mode;
             renderBill(mode);
         });
     });
 
-    // 日期选择器变化（自定义日期）
+    // 日期选择器变化
     datePicker.addEventListener('change', function() {
         quickBtns.forEach(b => b.classList.remove('active'));
         const dateStr = this.value;
