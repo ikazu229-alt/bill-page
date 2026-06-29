@@ -220,7 +220,7 @@
 
 <script>
     // ================================================================
-    //  数据解析 - 从 URL 获取 data 参数并解码
+    //  数据解析
     // ================================================================
     function getDataFromURL() {
         try {
@@ -230,7 +230,6 @@
                 console.warn('未找到 data 参数');
                 return null;
             }
-            // 尝试 base64 解码
             let jsonStr;
             try {
                 jsonStr = atob(decodeURIComponent(dataParam));
@@ -253,8 +252,9 @@
         return parts.join('.');
     }
 
+    // ★★★ 修复：使用本地日期格式，避免时区问题 ★★★
     function getDateStr(date) {
-        return date.toISOString().split('T')[0];
+        return date.toLocaleDateString('en-CA');
     }
 
     // ================================================================
@@ -309,7 +309,6 @@
                 }
         }
 
-        // 获取所有记录
         let allDeposits = (data.deposits || []).map(r => ({ ...r, type: 'deposit' }));
         let allWithdraws = (data.withdraws || []).map(r => ({ ...r, type: 'withdraw' }));
 
@@ -346,7 +345,6 @@
     function renderBill(mode) {
         console.log('renderBill 开始, mode:', mode);
 
-        // 重新从 URL 读取数据
         const data = getDataFromURL();
 
         if (!data) {
@@ -375,18 +373,15 @@
         const exchange = data.exchange || 1;
         const rate = data.rate || 0;
 
-        // 筛选数据
         const result = filterRecords(data, mode);
         const deposits = result.deposits;
         const withdraws = result.withdraws;
 
-        // 统计筛选后的数据
         const totalDepositRaw = deposits.reduce((sum, r) => sum + (r.raw_amount || 0), 0);
         const totalDepositUsd = deposits.reduce((sum, r) => sum + (r.amount || 0), 0);
         const totalWithdraw = withdraws.reduce((sum, r) => sum + (r.amount || 0), 0);
         const balance = totalDepositUsd - totalWithdraw;
 
-        // 更新统计卡片
         document.getElementById('totalDeposit').textContent = formatNumber(totalDepositRaw) || '0';
         document.getElementById('totalDepositUsd').textContent = totalDepositUsd.toFixed(2) + ' U';
         document.getElementById('totalWithdraw').textContent = totalWithdraw.toFixed(2) + ' U';
@@ -394,7 +389,6 @@
         document.getElementById('exchange').textContent = exchange;
         document.getElementById('rate').textContent = rate + '%';
 
-        // 更新记录计数
         document.getElementById('depositCount').textContent = deposits.length + ' 笔';
         document.getElementById('withdrawCount').textContent = withdraws.length + ' 笔';
         document.getElementById('depositTotalSummary').textContent = totalDepositUsd.toFixed(2) + ' U';
@@ -424,7 +418,6 @@
         }
         document.getElementById('footerInfo').textContent = '📅 ' + timeStr + dateRange;
 
-        // 渲染入款列表
         const depositList = document.getElementById('depositList');
         if (deposits.length === 0) {
             depositList.innerHTML = '<div class="empty-state"><span class="empty-icon">📭</span><div class="empty-text">暂无入款记录</div></div>';
@@ -455,7 +448,6 @@
             }).join('');
         }
 
-        // 渲染下发列表
         const withdrawList = document.getElementById('withdrawList');
         if (withdraws.length === 0) {
             withdrawList.innerHTML = '<div class="empty-state"><span class="empty-icon">📭</span><div class="empty-text">暂无下发记录</div></div>';
@@ -492,14 +484,12 @@
     const datePicker = document.getElementById('datePicker');
     const quickBtns = document.querySelectorAll('.quick-btn');
 
-    // 快速按钮点击
     quickBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             quickBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             const mode = this.dataset.mode;
 
-            // 如果是「今日」或「昨日」，自动更新日期选择器
             if (mode === 'today') {
                 const today = new Date();
                 datePicker.value = getDateStr(today);
@@ -513,7 +503,6 @@
         });
     });
 
-    // 日期选择器变化（手动选择日期）
     datePicker.addEventListener('change', function() {
         quickBtns.forEach(b => b.classList.remove('active'));
         const dateStr = this.value;
@@ -523,22 +512,17 @@
     });
 
     // ================================================================
-    //  初始化 - 延迟执行确保 DOM 完全加载
+    //  初始化
     // ================================================================
     document.addEventListener('DOMContentLoaded', function() {
         console.log('DOM 加载完成，开始初始化...');
-
-        // 设置日期选择器默认值为今天
         const today = new Date();
         datePicker.value = getDateStr(today);
-
-        // 延迟 100ms 执行，确保所有元素已就绪
         setTimeout(function() {
             renderBill('today');
         }, 100);
     });
 
-    // 如果 DOM 已经加载完成，立即执行
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
         console.log('DOM 已就绪，立即初始化...');
         const today = new Date();
