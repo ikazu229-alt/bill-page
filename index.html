@@ -5,14 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📋 三国支付 · 完整账单</title>
     <style>
-        /* ===== 全局重置 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #0b0f1a; color: #e8edf5; padding: 20px; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; }
-
-        /* ===== 主容器 ===== */
         .container { max-width: 1000px; width: 100%; background: linear-gradient(160deg, #141c30 0%, #0e1628 100%); border-radius: 32px; padding: 32px 30px 28px; box-shadow: 0 24px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.04); }
-
-        /* ===== 头部 ===== */
         .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid rgba(79,195,247,0.08); }
         .header-left { display: flex; align-items: center; gap: 14px; }
         .header-logo { width: 44px; height: 44px; background: linear-gradient(135deg, #4fc3f7, #0288d1); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 16px rgba(79,195,247,0.2); }
@@ -20,8 +15,6 @@
         .header h1 span { color: #4fc3f7; }
         .header-badge { background: rgba(79,195,247,0.1); padding: 4px 16px; border-radius: 20px; font-size: 12px; color: #81d4fa; border: 1px solid rgba(79,195,247,0.08); font-weight: 500; }
         .header-time { color: #546e7a; font-size: 13px; background: rgba(255,255,255,0.03); padding: 6px 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.04); }
-
-        /* ===== 日期选择器 ===== */
         .date-picker { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; background: rgba(255,255,255,0.02); padding: 12px 18px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.04); }
         .date-picker label { color: #78909c; font-size: 14px; font-weight: 500; }
         .date-picker input[type="date"] { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: #e8edf5; padding: 8px 14px; border-radius: 10px; font-size: 14px; cursor: pointer; outline: none; }
@@ -31,8 +24,6 @@
         .date-picker .quick-btn { padding: 6px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.3s; background: rgba(255,255,255,0.06); color: #78909c; }
         .date-picker .quick-btn:hover { background: rgba(255,255,255,0.12); color: #b0bec5; }
         .date-picker .quick-btn.active { background: rgba(79,195,247,0.2); color: #4fc3f7; border: 1px solid rgba(79,195,247,0.2); }
-
-        /* ===== 统计卡片 ===== */
         .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 20px; }
         .stat-card { background: rgba(255,255,255,0.02); border-radius: 18px; padding: 18px 14px 16px; text-align: center; border: 1px solid rgba(255,255,255,0.04); transition: all 0.3s ease; position: relative; overflow: hidden; }
         .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 18px 18px 0 0; }
@@ -51,16 +42,12 @@
         .stat-value.gold { color: #ffd54f; }
         .stat-value.purple { color: #ce93d8; }
         .stat-sub { font-size: 11px; color: #455a64; margin-top: 2px; font-weight: 400; }
-
-        /* ===== 统计图例 ===== */
         .stats-legend { display: flex; justify-content: center; gap: 24px; margin-bottom: 16px; font-size: 12px; color: #546e7a; flex-wrap: wrap; }
         .stats-legend span { display: flex; align-items: center; gap: 6px; }
         .stats-legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
         .stats-legend .dot.green { background: #66bb6a; }
         .stats-legend .dot.red { background: #ef5350; }
         .stats-legend .dot.blue { background: #4fc3f7; }
-
-        /* ===== 记录区块 ===== */
         .section { margin: 20px 0 6px; }
         .section-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: rgba(255,255,255,0.02); border-radius: 14px; margin-bottom: 10px; border-left: 4px solid transparent; }
         .section-header.deposit-header { border-left-color: #43a047; }
@@ -71,8 +58,6 @@
         .badge-withdraw { background: rgba(229,57,53,0.12); color: #ef9a9a; }
         .section-amount-summary { color: #546e7a; font-size: 13px; font-weight: 400; }
         .section-amount-summary strong { color: #b0bec5; }
-
-        /* ===== 单条记录 ===== */
         .record { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; padding: 12px 18px; margin: 4px 0; background: rgba(255,255,255,0.02); border-radius: 14px; border: 1px solid rgba(255,255,255,0.03); transition: all 0.25s ease; }
         .record:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.07); transform: translateX(4px); }
         .record-deposit { border-left: 3px solid #43a047; }
@@ -90,22 +75,16 @@
         .tag-exchange { background: rgba(255,213,79,0.08); color: #ffd54f; border: 1px solid rgba(255,213,79,0.08); }
         .tag-rate { background: rgba(206,147,216,0.08); color: #ce93d8; border: 1px solid rgba(206,147,216,0.08); }
         .record-user { color: #546e7a; font-size: 12px; background: rgba(255,255,255,0.04); padding: 2px 12px; border-radius: 10px; font-weight: 400; }
-
         .empty-state { text-align: center; padding: 44px 20px 36px; color: #455a64; }
         .empty-state .empty-icon { font-size: 44px; display: block; margin-bottom: 12px; opacity: 0.3; }
         .empty-state .empty-text { font-size: 15px; color: #546e7a; }
-
-        /* ===== 底部 ===== */
         .footer { margin-top: 28px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.04); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; color: #455a64; font-size: 13px; }
         .footer .total-badge { background: rgba(79,195,247,0.04); padding: 4px 18px; border-radius: 16px; border: 1px solid rgba(79,195,247,0.04); color: #546e7a; }
         .footer .total-badge strong { color: #b0bec5; font-weight: 600; }
-
         .error-state { text-align: center; padding: 60px 20px; }
         .error-state .error-icon { font-size: 52px; display: block; margin-bottom: 16px; }
         .error-state .error-title { color: #ef5350; font-size: 20px; font-weight: 600; }
         .error-state .error-desc { color: #546e7a; font-size: 14px; margin-top: 8px; }
-
-        /* ===== 响应式 ===== */
         @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 768px) {
             body { padding: 12px; }
@@ -145,7 +124,6 @@
 <body>
 <div class="container">
 
-    <!-- ===== 头部 ===== -->
     <div class="header">
         <div class="header-left">
             <div class="header-logo">💳</div>
@@ -155,7 +133,6 @@
         <div class="header-time" id="headerTime">加载中...</div>
     </div>
 
-    <!-- ===== 日期选择器 ===== -->
     <div class="date-picker">
         <label>📅 选择日期：</label>
         <input type="date" id="datePicker">
@@ -168,7 +145,6 @@
         </div>
     </div>
 
-    <!-- ===== 统计卡片 ===== -->
     <div class="stats-grid" id="stats">
         <div class="stat-card">
             <span class="stat-icon">📥</span>
@@ -202,15 +178,13 @@
         </div>
     </div>
 
-    <!-- ===== 统计图例 ===== -->
     <div class="stats-legend">
         <span><span class="dot green"></span>入款</span>
         <span><span class="dot red"></span>下发</span>
         <span><span class="dot blue"></span>余额</span>
-        <span>📊 显示所选日期的账单记录</span>
+        <span>📊 统计全部数据 · 列表按日期筛选</span>
     </div>
 
-    <!-- ===== 入款记录 ===== -->
     <div class="section">
         <div class="section-header deposit-header">
             <div class="section-title">
@@ -224,7 +198,6 @@
         <div id="depositList"></div>
     </div>
 
-    <!-- ===== 下发记录 ===== -->
     <div class="section">
         <div class="section-header withdraw-header">
             <div class="section-title">
@@ -238,7 +211,6 @@
         <div id="withdrawList"></div>
     </div>
 
-    <!-- ===== 底部 ===== -->
     <div class="footer">
         <span id="footerInfo">📅 加载中...</span>
         <span class="total-badge">📊 共 <strong id="totalRecords">0</strong> 条记录</span>
@@ -319,7 +291,6 @@
                 endDate = '2099-12-31';
                 break;
             default:
-                // 自定义日期
                 if (mode && mode !== '') {
                     startDate = mode;
                     endDate = mode;
@@ -329,19 +300,15 @@
                 }
         }
 
-        // 获取所有记录
         let allDeposits = (allData.deposits || []).map(r => ({ ...r, type: 'deposit' }));
         let allWithdraws = (allData.withdraws || []).map(r => ({ ...r, type: 'withdraw' }));
 
-        // 为记录添加日期（如果没有日期字段，使用今天）
         const defaultDate = new Date().toISOString().split('T')[0];
         allDeposits = allDeposits.map(r => ({ ...r, date: r.date || defaultDate }));
         allWithdraws = allWithdraws.map(r => ({ ...r, date: r.date || defaultDate }));
 
-        // 合并所有记录
         allRecords = [...allDeposits, ...allWithdraws];
 
-        // 按日期筛选
         let filtered = allRecords;
         if (startDate && endDate) {
             filtered = allRecords.filter(r => {
@@ -350,7 +317,6 @@
             });
         }
 
-        // 按时间排序
         filtered.sort((a, b) => {
             const timeA = a.time || '00:00:00';
             const timeB = b.time || '00:00:00';
@@ -392,34 +358,42 @@
         const exchange = allData.exchange || 1;
         const rate = allData.rate || 0;
 
+        // ===== 全部数据（用于统计卡片） =====
+        const allDeposits = (allData.deposits || []).map(r => ({ ...r, type: 'deposit' }));
+        const allWithdraws = (allData.withdraws || []).map(r => ({ ...r, type: 'withdraw' }));
+
+        const totalDepositRawAll = allDeposits.reduce((sum, r) => sum + (r.raw_amount || 0), 0);
+        const totalDepositUsdAll = allDeposits.reduce((sum, r) => sum + (r.amount || 0), 0);
+        const totalWithdrawAll = allWithdraws.reduce((sum, r) => sum + (r.amount || 0), 0);
+        const balanceAll = totalDepositUsdAll - totalWithdrawAll;
+
+        // ===== 筛选后的数据（用于记录列表） =====
         const result = filterRecords(mode);
         const deposits = result.deposits;
         const withdraws = result.withdraws;
 
-        const totalDepositRaw = deposits.reduce((sum, r) => sum + (r.raw_amount || 0), 0);
-        const totalDepositUsd = deposits.reduce((sum, r) => sum + (r.amount || 0), 0);
-        const totalWithdraw = withdraws.reduce((sum, r) => sum + (r.amount || 0), 0);
-        const balance = totalDepositUsd - totalWithdraw;
-
-        // 更新统计卡片
-        document.getElementById('totalDeposit').textContent = formatNumber(totalDepositRaw) || '0';
-        document.getElementById('totalDepositUsd').textContent = totalDepositUsd.toFixed(2) + ' U';
-        document.getElementById('totalWithdraw').textContent = totalWithdraw.toFixed(2) + ' U';
-        document.getElementById('balance').textContent = balance.toFixed(2) + ' U';
+        // ===== 更新统计卡片（全部数据） =====
+        document.getElementById('totalDeposit').textContent = formatNumber(totalDepositRawAll) || '0';
+        document.getElementById('totalDepositUsd').textContent = totalDepositUsdAll.toFixed(2) + ' U';
+        document.getElementById('totalWithdraw').textContent = totalWithdrawAll.toFixed(2) + ' U';
+        document.getElementById('balance').textContent = balanceAll.toFixed(2) + ' U';
         document.getElementById('exchange').textContent = exchange;
         document.getElementById('rate').textContent = rate + '%';
 
+        // ===== 更新记录计数（筛选后的数据） =====
+        const filteredDepositUsd = deposits.reduce((sum, r) => sum + (r.amount || 0), 0);
+        const filteredWithdrawUsd = withdraws.reduce((sum, r) => sum + (r.amount || 0), 0);
+
         document.getElementById('depositCount').textContent = deposits.length + ' 笔';
         document.getElementById('withdrawCount').textContent = withdraws.length + ' 笔';
-        document.getElementById('depositTotalSummary').textContent = totalDepositUsd.toFixed(2) + ' U';
-        document.getElementById('withdrawTotalSummary').textContent = totalWithdraw.toFixed(2) + ' U';
+        document.getElementById('depositTotalSummary').textContent = filteredDepositUsd.toFixed(2) + ' U';
+        document.getElementById('withdrawTotalSummary').textContent = filteredWithdrawUsd.toFixed(2) + ' U';
         document.getElementById('totalRecords').textContent = deposits.length + withdraws.length;
 
         const now = new Date();
         const timeStr = now.toLocaleString('zh-CN', { hour12: false });
         document.getElementById('headerTime').textContent = '📅 ' + timeStr;
 
-        // 显示筛选范围
         let dateRange = '';
         const modeNames = {
             'today': '今日',
@@ -439,7 +413,7 @@
         }
         document.getElementById('footerInfo').textContent = '📅 ' + timeStr + dateRange;
 
-        // 渲染入款
+        // ===== 渲染入款列表 =====
         const depositList = document.getElementById('depositList');
         if (deposits.length === 0) {
             depositList.innerHTML = '<div class="empty-state"><span class="empty-icon">📭</span><div class="empty-text">暂无入款记录</div></div>';
@@ -470,7 +444,7 @@
             }).join('');
         }
 
-        // 渲染下发
+        // ===== 渲染下发列表 =====
         const withdrawList = document.getElementById('withdrawList');
         if (withdraws.length === 0) {
             withdrawList.innerHTML = '<div class="empty-state"><span class="empty-icon">📭</span><div class="empty-text">暂无下发记录</div></div>';
@@ -505,11 +479,9 @@
     const datePicker = document.getElementById('datePicker');
     const quickBtns = document.querySelectorAll('.quick-btn');
 
-    // 设置今天的日期为默认值
     const today = new Date().toISOString().split('T')[0];
     datePicker.value = today;
 
-    // 快速按钮点击
     quickBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             quickBtns.forEach(b => b.classList.remove('active'));
@@ -519,7 +491,6 @@
         });
     });
 
-    // 日期选择器变化
     datePicker.addEventListener('change', function() {
         quickBtns.forEach(b => b.classList.remove('active'));
         const dateStr = this.value;
@@ -529,7 +500,7 @@
     });
 
     // ================================================================
-    //  初始化 - 默认显示今日
+    //  初始化
     // ================================================================
     document.addEventListener('DOMContentLoaded', function() {
         renderBill('today');
