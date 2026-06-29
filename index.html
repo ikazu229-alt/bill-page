@@ -182,7 +182,7 @@
         <span><span class="dot green"></span>入款</span>
         <span><span class="dot red"></span>下发</span>
         <span><span class="dot blue"></span>余额</span>
-        <span>📊 统计全部数据 · 列表按日期筛选</span>
+        <span>📊 统计和列表均按所选日期筛选</span>
     </div>
 
     <div class="section">
@@ -358,36 +358,30 @@
         const exchange = allData.exchange || 1;
         const rate = allData.rate || 0;
 
-        // ===== 全部数据（用于统计卡片） =====
-        const allDeposits = (allData.deposits || []).map(r => ({ ...r, type: 'deposit' }));
-        const allWithdraws = (allData.withdraws || []).map(r => ({ ...r, type: 'withdraw' }));
-
-        const totalDepositRawAll = allDeposits.reduce((sum, r) => sum + (r.raw_amount || 0), 0);
-        const totalDepositUsdAll = allDeposits.reduce((sum, r) => sum + (r.amount || 0), 0);
-        const totalWithdrawAll = allWithdraws.reduce((sum, r) => sum + (r.amount || 0), 0);
-        const balanceAll = totalDepositUsdAll - totalWithdrawAll;
-
-        // ===== 筛选后的数据（用于记录列表） =====
+        // ===== 获取筛选后的数据 =====
         const result = filterRecords(mode);
         const deposits = result.deposits;
         const withdraws = result.withdraws;
 
-        // ===== 更新统计卡片（全部数据） =====
-        document.getElementById('totalDeposit').textContent = formatNumber(totalDepositRawAll) || '0';
-        document.getElementById('totalDepositUsd').textContent = totalDepositUsdAll.toFixed(2) + ' U';
-        document.getElementById('totalWithdraw').textContent = totalWithdrawAll.toFixed(2) + ' U';
-        document.getElementById('balance').textContent = balanceAll.toFixed(2) + ' U';
+        // ===== 统计筛选后的数据 =====
+        const totalDepositRaw = deposits.reduce((sum, r) => sum + (r.raw_amount || 0), 0);
+        const totalDepositUsd = deposits.reduce((sum, r) => sum + (r.amount || 0), 0);
+        const totalWithdraw = withdraws.reduce((sum, r) => sum + (r.amount || 0), 0);
+        const balance = totalDepositUsd - totalWithdraw;
+
+        // ===== 更新统计卡片（筛选后的数据） =====
+        document.getElementById('totalDeposit').textContent = formatNumber(totalDepositRaw) || '0';
+        document.getElementById('totalDepositUsd').textContent = totalDepositUsd.toFixed(2) + ' U';
+        document.getElementById('totalWithdraw').textContent = totalWithdraw.toFixed(2) + ' U';
+        document.getElementById('balance').textContent = balance.toFixed(2) + ' U';
         document.getElementById('exchange').textContent = exchange;
         document.getElementById('rate').textContent = rate + '%';
 
-        // ===== 更新记录计数（筛选后的数据） =====
-        const filteredDepositUsd = deposits.reduce((sum, r) => sum + (r.amount || 0), 0);
-        const filteredWithdrawUsd = withdraws.reduce((sum, r) => sum + (r.amount || 0), 0);
-
+        // ===== 更新记录计数 =====
         document.getElementById('depositCount').textContent = deposits.length + ' 笔';
         document.getElementById('withdrawCount').textContent = withdraws.length + ' 笔';
-        document.getElementById('depositTotalSummary').textContent = filteredDepositUsd.toFixed(2) + ' U';
-        document.getElementById('withdrawTotalSummary').textContent = filteredWithdrawUsd.toFixed(2) + ' U';
+        document.getElementById('depositTotalSummary').textContent = totalDepositUsd.toFixed(2) + ' U';
+        document.getElementById('withdrawTotalSummary').textContent = totalWithdraw.toFixed(2) + ' U';
         document.getElementById('totalRecords').textContent = deposits.length + withdraws.length;
 
         const now = new Date();
