@@ -220,21 +220,26 @@
 
 <script>
     // ================================================================
-    //  数据解析 - 每次调用都重新从 URL 读取
+    //  数据解析 - 从 URL 获取 data 参数并解码
     // ================================================================
     function getDataFromURL() {
-        const params = new URLSearchParams(window.location.search);
-        const dataParam = params.get('data');
-        if (!dataParam) return null;
         try {
-            let jsonStr = dataParam;
+            const params = new URLSearchParams(window.location.search);
+            const dataParam = params.get('data');
+            if (!dataParam) {
+                console.warn('未找到 data 参数');
+                return null;
+            }
+            // 尝试 base64 解码
+            let jsonStr;
             try {
-                const decoded = atob(decodeURIComponent(dataParam));
-                jsonStr = decoded;
+                jsonStr = atob(decodeURIComponent(dataParam));
             } catch (e) {
                 jsonStr = decodeURIComponent(dataParam);
             }
-            return JSON.parse(jsonStr);
+            const data = JSON.parse(jsonStr);
+            console.log('数据解析成功，入款:', data.deposits ? data.deposits.length : 0, '笔');
+            return data;
         } catch (e) {
             console.error('解析数据失败:', e);
             return null;
@@ -256,7 +261,10 @@
     //  筛选逻辑
     // ================================================================
     function filterRecords(data, mode) {
-        if (!data) return { deposits: [], withdraws: [], startDate: null, endDate: null };
+        if (!data) {
+            console.warn('filterRecords: data 为空');
+            return { deposits: [], withdraws: [], startDate: null, endDate: null };
+        }
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -292,7 +300,6 @@
                 endDate = '2099-12-31';
                 break;
             default:
-                // 自定义日期
                 if (mode && mode !== '') {
                     startDate = mode;
                     endDate = mode;
@@ -329,6 +336,7 @@
         const deposits = filtered.filter(r => r.type === 'deposit');
         const withdraws = filtered.filter(r => r.type === 'withdraw');
 
+        console.log('筛选完成:', mode, '入款', deposits.length, '笔, 下发', withdraws.length, '笔');
         return { deposits, withdraws, startDate, endDate };
     }
 
@@ -336,10 +344,13 @@
     //  渲染
     // ================================================================
     function renderBill(mode) {
-        // 每次重新从 URL 读取数据
+        console.log('renderBill 开始, mode:', mode);
+
+        // 重新从 URL 读取数据
         const data = getDataFromURL();
 
         if (!data) {
+            console.warn('renderBill: 数据为空');
             document.getElementById('depositList').innerHTML =
                 '<div class="error-state"><span class="error-icon">❌</span><div class="error-title">未找到账单数据</div><div class="error-desc">请重新从机器人获取链接</div></div>';
             document.getElementById('withdrawList').innerHTML = '';
@@ -358,6 +369,8 @@
             document.getElementById('footerInfo').textContent = '📅 加载中...';
             return;
         }
+
+        console.log('数据已加载，入款:', data.deposits ? data.deposits.length : 0, '笔');
 
         const exchange = data.exchange || 1;
         const rate = data.rate || 0;
@@ -469,6 +482,8 @@
                 `;
             }).join('');
         }
+
+        console.log('renderBill 完成');
     }
 
     // ================================================================
@@ -508,13 +523,30 @@
     });
 
     // ================================================================
-    //  初始化 - 默认显示今日
+    //  初始化 - 延迟执行确保 DOM 完全加载
     // ================================================================
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM 加载完成，开始初始化...');
+
+        // 设置日期选择器默认值为今天
         const today = new Date();
         datePicker.value = getDateStr(today);
-        renderBill('today');
+
+        // 延迟 100ms 执行，确保所有元素已就绪
+        setTimeout(function() {
+            renderBill('today');
+        }, 100);
     });
+
+    // 如果 DOM 已经加载完成，立即执行
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        console.log('DOM 已就绪，立即初始化...');
+        const today = new Date();
+        datePicker.value = getDateStr(today);
+        setTimeout(function() {
+            renderBill('today');
+        }, 100);
+    }
 </script>
 </body>
 </html>
