@@ -476,6 +476,7 @@
     const today = new Date().toISOString().split('T')[0];
     datePicker.value = today;
 
+    // 快速按钮点击 - 先清除所有 active，再给当前按钮加 active
     quickBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             quickBtns.forEach(b => b.classList.remove('active'));
@@ -485,6 +486,7 @@
         });
     });
 
+    // 日期选择器变化 - 清除所有按钮的 active 状态
     datePicker.addEventListener('change', function() {
         quickBtns.forEach(b => b.classList.remove('active'));
         const dateStr = this.value;
@@ -494,7 +496,7 @@
     });
 
     // ================================================================
-    //  初始化
+    //  初始化 - 默认显示今日
     // ================================================================
     document.addEventListener('DOMContentLoaded', function() {
         renderBill('today');
